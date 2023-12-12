@@ -6979,6 +6979,7 @@ dependencies = [
  "once_cell",
  "serde",
  "serde_json",
+ "tracing",
 ]
 
 [[package]]
