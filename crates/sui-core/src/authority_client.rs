@@ -29,12 +29,14 @@ pub trait AuthorityAPI {
     async fn handle_transaction(
         &self,
         transaction: Transaction,
+        metadata: Option<tonic::MetadataMap>,
     ) -> Result<HandleTransactionResponse, SuiError>;
 
     /// Execute a certificate.
     async fn handle_certificate_v2(
         &self,
         certificate: CertifiedTransaction,
+        metadata: Option<tonic::MetadataMap>,
     ) -> Result<HandleCertificateResponseV2, SuiError>;
 
     /// Handle Object information requests for this account.
@@ -103,9 +105,15 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_transaction(
         &self,
         transaction: Transaction,
+        metadata: Option<tonic::MetadataMap>,
     ) -> Result<HandleTransactionResponse, SuiError> {
+        let request = transcation.into_request();
+        metadata.into_iter().for_each(|(k, v)| {
+            request.metadata_mut().insert(k, v);
+        });
+
         self.client()
-            .transaction(transaction)
+            .transaction(request)
             .await
             .map(tonic::Response::into_inner)
             .map_err(Into::into)
@@ -115,10 +123,16 @@ impl AuthorityAPI for NetworkAuthorityClient {
     async fn handle_certificate_v2(
         &self,
         certificate: CertifiedTransaction,
+        metadata: Option<tonic::MetadataMap>,
     ) -> Result<HandleCertificateResponseV2, SuiError> {
+        let request = transcation.into_request();
+        metadata.into_iter().for_each(|(k, v)| {
+            request.metadata_mut().insert(k, v);
+        });
+
         let response = self
             .client()
-            .handle_certificate_v2(certificate.clone())
+            .handle_certificate_v2(request)
             .await
             .map(tonic::Response::into_inner);
 
