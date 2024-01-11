@@ -60,6 +60,8 @@ pub struct SuiInitArgs {
     pub reference_gas_price: Option<u64>,
     #[clap(long = "default-gas-price")]
     pub default_gas_price: Option<u64>,
+    #[clap(long = "env-vars", num_args(1..))]
+    pub env_vars: Option<Vec<String>>,
 }
 
 #[derive(Debug, clap::Parser)]
@@ -158,6 +160,8 @@ pub struct RunGraphqlCommand {
     pub show_service_version: bool,
     #[clap(long, num_args(1..))]
     pub cursors: Vec<String>,
+    #[clap(long = "force-objects-snapshot")]
+    pub force_objects_snapshot: bool,
 }
 
 #[derive(Debug, clap::Parser)]
