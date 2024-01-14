@@ -7,6 +7,7 @@ use async_graphql::{
     *,
 };
 use diesel::{alias, ExpressionMethods, NullableExpressionMethods, OptionalExtension, QueryDsl};
+use either::Either;
 use fastcrypto::encoding::{Base58, Encoding};
 use sui_indexer::{
     models_v2::transactions::StoredTransaction,
@@ -16,6 +17,7 @@ use sui_indexer::{
 };
 use sui_types::{
     base_types::SuiAddress as NativeSuiAddress,
+    message_envelope::Message,
     transaction::{
         SenderSignedData as NativeSenderSignedData, TransactionDataAPI, TransactionExpiration,
     },
@@ -33,6 +35,7 @@ use super::{
     digest::Digest,
     epoch::Epoch,
     event::Event,
+    execution_result::ExecutedTransaction,
     gas::GasInput,
     sui_address::SuiAddress,
     transaction_block_effects::TransactionBlockEffects,
@@ -42,9 +45,8 @@ use super::{
 
 #[derive(Clone)]
 pub(crate) struct TransactionBlock {
-    /// Representation of transaction data in the Indexer's Store. The indexer stores the
-    /// transaction data and its effects together, in one table.
-    pub stored: StoredTransaction,
+    /// Representation of transaction data either in the Indexer's Store, or coming from an execution result.
+    pub tx_data: Either<StoredTransaction, ExecutedTransaction>,
 
     /// Deserialized representation of `stored.raw_transaction`.
     pub native: NativeSenderSignedData,
@@ -88,7 +90,7 @@ impl TransactionBlock {
     /// A 32-byte hash that uniquely identifies the transaction block contents, encoded in Base58.
     /// This serves as a unique id for the block on chain.
     async fn digest(&self) -> String {
-        Base58::encode(&self.stored.transaction_digest)
+        Base58::encode(self.native.digest())
     }
 
     /// The address corresponding to the public key that signed this transaction. System
@@ -132,7 +134,7 @@ impl TransactionBlock {
     /// The effects field captures the results to the chain of executing this transaction.
     async fn effects(&self) -> Result<Option<TransactionBlockEffects>> {
         Ok(Some(
-            TransactionBlockEffects::try_from(self.stored.clone()).extend()?,
+            TransactionBlockEffects::try_from(self.clone()).extend()?,
         ))
     }
 
@@ -147,7 +149,11 @@ impl TransactionBlock {
     ) -> Result<Connection<String, Event>> {
         let page = Page::from_params(ctx.data_unchecked(), first, after, last, before)?;
         let mut connection = Connection::new(false, false);
-        let Some((prev, next, cs)) = page.paginate_indices(self.stored.events.len()) else {
+        let len = match &self.tx_data {
+            Either::Left(stored) => stored.events.len(),
+            Either::Right(executed) => executed.events.len(),
+        };
+        let Some((prev, next, cs)) = page.paginate_indices(len) else {
             return Ok(connection);
         };
 
@@ -155,7 +161,12 @@ impl TransactionBlock {
         connection.has_next_page = next;
 
         for c in cs {
-            let event = Event::try_from_stored_transaction(&self.stored, *c).extend()?;
+            let event = match self.tx_data {
+                Either::Left(ref stored) => {
+                    Event::try_from_stored_transaction(stored, *c).extend()?
+                }
+                Either::Right(ref executed) => executed.events[*c].clone(),
+            };
             connection.edges.push(Edge::new(c.encode_cursor(), event));
         }
 
@@ -175,7 +186,12 @@ impl TransactionBlock {
 
     /// Serialized form of this transaction's `SenderSignedData`, BCS serialized and Base64 encoded.
     async fn bcs(&self) -> Option<Base64> {
-        Some(Base64::from(&self.stored.raw_transaction))
+        match &self.tx_data {
+            Either::Left(stored) => Some(Base64::from(&stored.raw_transaction)),
+            Either::Right(executed) => bcs::to_bytes(&executed.sender_signed_data)
+                .ok()
+                .map(Base64::from),
+        }
     }
 }
 
@@ -429,7 +445,10 @@ impl TryFrom<StoredTransaction> for TransactionBlock {
         let native = bcs::from_bytes(&stored.raw_transaction)
             .map_err(|e| Error::Internal(format!("Error deserializing transaction block: {e}")))?;
 
-        Ok(TransactionBlock { stored, native })
+        Ok(TransactionBlock {
+            tx_data: Either::Left(stored),
+            native,
+        })
     }
 }
 
