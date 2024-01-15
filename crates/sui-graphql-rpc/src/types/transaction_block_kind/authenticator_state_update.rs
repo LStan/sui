@@ -12,7 +12,7 @@ use sui_types::{
 };
 
 use crate::types::{
-    cursor::{Cursor, Page},
+    cursor::{JsonCursor, Page},
     epoch::Epoch,
 };
 
@@ -21,7 +21,7 @@ pub(crate) struct AuthenticatorStateUpdateTransaction(
     pub NativeAuthenticatorStateUpdateTransaction,
 );
 
-pub(crate) type CActiveJwk = Cursor<usize>;
+pub(crate) type CActiveJwk = JsonCursor<usize>;
 
 struct ActiveJwk(NativeActiveJwk);
 

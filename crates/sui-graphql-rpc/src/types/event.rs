@@ -35,7 +35,7 @@ pub(crate) struct EventKey {
     e: u64,
 }
 
-pub(crate) type Cursor = cursor::Cursor<EventKey>;
+pub(crate) type Cursor = cursor::JsonCursor<EventKey>;
 type Query<ST, GB> = data::Query<ST, events::table, GB>;
 
 #[derive(InputObject, Clone, Default)]

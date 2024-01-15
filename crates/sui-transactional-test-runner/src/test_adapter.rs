@@ -1028,10 +1028,18 @@ impl<'a> SuiTestAdapter<'a> {
         let objects = self
             .object_enumeration
             .iter()
-            .filter_map(|(oid, fid)| match fid {
-                FakeID::Known(_) => None,
-                FakeID::Enumerated(x, y) => Some((format!("obj_{x}_{y}"), oid.to_string())),
-            });
+            .map(|(oid, fid)| match fid {
+                FakeID::Known(_) => vec![],
+                FakeID::Enumerated(x, y) => vec![
+                    (format!("obj_{x}_{y}"), oid.to_string()),
+                    // Add a binding to treat this object as a cursor
+                    (
+                        format!("obj_{x}_{y}_cursor"),
+                        Base64::encode(bcs::to_bytes(&oid.to_vec()).unwrap_or_default()),
+                    ),
+                ],
+            })
+            .flatten();
 
         let cursors = cursors
             .iter()
