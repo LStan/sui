@@ -612,13 +612,13 @@ pub mod tests {
 
         // Should complete successfully
         let resp = schema
-            .execute("{ objectConnection(first: 1) { nodes { version } } }")
+            .execute("{ objects(first: 1) { nodes { version } } }")
             .await;
         assert!(resp.is_ok());
 
         // Should fail
         let err: Vec<_> = schema
-            .execute("{ objectConnection(first: 51) { nodes { version } } }")
+            .execute("{ objects(first: 51) { nodes { version } } }")
             .await
             .into_result()
             .unwrap_err()

@@ -1028,7 +1028,7 @@ impl<'a> SuiTestAdapter<'a> {
         let objects = self
             .object_enumeration
             .iter()
-            .map(|(oid, fid)| match fid {
+            .flat_map(|(oid, fid)| match fid {
                 FakeID::Known(_) => vec![],
                 FakeID::Enumerated(x, y) => vec![
                     (format!("obj_{x}_{y}"), oid.to_string()),
@@ -1038,8 +1038,7 @@ impl<'a> SuiTestAdapter<'a> {
                         Base64::encode(bcs::to_bytes(&oid.to_vec()).unwrap_or_default()),
                     ),
                 ],
-            })
-            .flatten();
+            });
 
         let cursors = cursors
             .iter()
