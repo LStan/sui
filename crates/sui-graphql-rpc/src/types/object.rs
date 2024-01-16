@@ -496,7 +496,7 @@ impl Object {
         stored_obj.map(Self::try_from).transpose()
     }
 
-    /// Query the databse for a `page` of objects. The page uses the bytes of an Object ID as the
+    /// Query the database for a `page` of objects. The page uses the bytes of an Object ID as the
     /// cursor, and can optionally be further `filter`-ed. The `owner_type` is an optional
     /// additional filter, to constrain the objects to be those whose owner is of a particular kind
     /// (address-owned, object-owned, shared, immutable). This kind of filter is not exposed
