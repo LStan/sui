@@ -365,7 +365,8 @@
                 "showEffects": true,
                 "showEvents": true,
                 "showObjectChanges": true,
-                "showBalanceChanges": true
+                "showBalanceChanges": true,
+                "showRawEffects": true
               }
             },
             {
@@ -1962,7 +1963,8 @@
                 "showEffects": true,
                 "showEvents": true,
                 "showObjectChanges": false,
-                "showBalanceChanges": false
+                "showBalanceChanges": false,
+                "showRawEffects": false
               }
             }
           ],
@@ -2339,7 +2341,8 @@
                 "showEffects": true,
                 "showEvents": true,
                 "showObjectChanges": false,
-                "showBalanceChanges": false
+                "showBalanceChanges": false,
+                "showRawEffects": false
               }
             }
           ],
@@ -10345,6 +10348,14 @@
               "$ref": "#/components/schemas/ObjectChange"
             }
           },
+          "rawEffects": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            }
+          },
           "rawTransaction": {
             "description": "BCS encoded [SenderSignedData] that includes input object references returns empty array if `show_raw_transaction` is false",
             "allOf": [
@@ -10401,6 +10412,11 @@
           },
           "showObjectChanges": {
             "description": "Whether to show object_changes. Default to be False",
+            "default": false,
+            "type": "boolean"
+          },
+          "showRawEffects": {
+            "description": "Whether to show raw transaction effects. Default to be False",
             "default": false,
             "type": "boolean"
           },

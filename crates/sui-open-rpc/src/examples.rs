@@ -764,6 +764,7 @@ impl RpcExampleProvider {
             confirmed_local_execution: None,
             checkpoint: None,
             errors: vec![],
+            raw_effects: vec![],
         };
 
         (data2, signatures, recipient, obj_id, result)
