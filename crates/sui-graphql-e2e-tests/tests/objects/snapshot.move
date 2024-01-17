@@ -89,7 +89,7 @@ module Test::M1 {
 
 //# create-checkpoint
 
-//# run-graphql --force-objects-snapshot
+//# run-graphql
 # should not exist on live objects
 {
   object(

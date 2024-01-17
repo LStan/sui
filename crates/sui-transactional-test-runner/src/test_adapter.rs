@@ -550,7 +550,6 @@ impl<'a> MoveTestAdapter<'a> for SuiTestAdapter<'a> {
                 show_headers,
                 show_service_version,
                 cursors,
-                force_objects_snapshot,
             }) => {
                 let file = data.ok_or_else(|| anyhow::anyhow!("Missing GraphQL query"))?;
                 let contents = std::fs::read_to_string(file.path())?;
@@ -560,9 +559,7 @@ impl<'a> MoveTestAdapter<'a> for SuiTestAdapter<'a> {
                     .wait_for_checkpoint_catchup(highest_checkpoint, Duration::from_secs(30))
                     .await;
 
-                if force_objects_snapshot {
-                    cluster.force_object_snapshot_catchup().await;
-                }
+                cluster.force_object_snapshot_catchup().await;
 
                 let interpolated = self.interpolate_query(&contents, &cursors)?;
                 let resp = cluster
