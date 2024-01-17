@@ -559,7 +559,7 @@ impl<'a> MoveTestAdapter<'a> for SuiTestAdapter<'a> {
                     .wait_for_checkpoint_catchup(highest_checkpoint, Duration::from_secs(30))
                     .await;
 
-                cluster.force_object_snapshot_catchup().await;
+                cluster.force_objects_snapshot_catchup().await;
 
                 let interpolated = self.interpolate_query(&contents, &cursors)?;
                 let resp = cluster

@@ -206,7 +206,19 @@ impl ExecutorCluster {
         .expect("Timeout waiting for indexer to catchup to checkpoint");
     }
 
-    pub async fn force_object_snapshot_catchup(&self) {
+    /// Since the indexer commits not one but potentially a set of checkpoints at a time, it's possible
+    /// that while the latest checkpoint to commit would exceed the max lag allowed by the snapshot,
+    /// because the persist_objects_snapshot method only sees the current state of the indexer's db,
+    /// which is at an earlier checkpoint, it does not actually kick off a new snapshot. For example, at
+    /// min_lag=0, max_lag=2, we'll take a snapshot every time max(sequence_number) on checkpoints >=
+    /// max_lag-min_lag + max(checkpoint_sequence_number) on snapshots. Let's say indexer falls behind,
+    /// and now is trying to index checkpoints 3 through 6. the checkpoints table will show that it is
+    /// currently at checkpoint 2. to the objects_snapshot logic, this checkpoint is still within the
+    /// allowable lag, so it does not do anything, even though by the end of this commitment we will be
+    /// at checkpoint 6, and the objects_snapshot table will have fallen further behind. Thus, in our
+    /// tests we have to force the indexer to take another look. This time, it'll see that checkpoints
+    /// table is at checkpoint 6, and it will take a snapshot.
+    pub async fn force_objects_snapshot_catchup(&self) {
         self.indexer_store.persist_object_snapshot().await.unwrap();
     }
 }
