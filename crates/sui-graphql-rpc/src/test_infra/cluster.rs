@@ -45,6 +45,7 @@ pub struct Cluster {
     pub graphql_client: SimpleClient,
 }
 
+/// Starts a validator, fullnode, indexer, and graphql service for testing.
 pub async fn start_cluster(
     graphql_connection_config: ConnectionConfig,
     internal_data_source_rpc_port: Option<u16>,
@@ -80,7 +81,8 @@ pub async fn start_cluster(
     }
 }
 
-// TODO (wlmyng) what's the diff between this and start_cluster? This yields an executor to do e2e tests, start_cluster only creates
+/// Takes in a simulated instantiation of a Sui blockchain and builds a cluster around it. This
+/// cluster is typically used in e2e tests to emulate and test behaviors.
 pub async fn serve_executor(
     graphql_connection_config: ConnectionConfig,
     internal_data_source_rpc_port: u16,
@@ -100,8 +102,6 @@ pub async fn serve_executor(
     let executor_server_handle = tokio::spawn(async move {
         sui_rest_api::start_service(executor_server_url, executor, Some("/rest".to_owned())).await;
     });
-
-    // set the env variables
 
     let (pg_store, pg_handle) = start_test_indexer_v2(
         Some(db_url),
