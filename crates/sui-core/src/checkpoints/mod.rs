@@ -1530,11 +1530,8 @@ async fn diagnose_split_brain(
         );
     }
 
-    let sui_system_state = state
-        .database
-        .get_sui_system_state_object()
-        .expect("Failed to get system state object");
-    let committee = sui_system_state.get_current_epoch_committee();
+    let epoch_store = state.load_epoch_store_one_call_per_task();
+    let committee = epoch_store.committee();
     let network_config = default_mysten_network_config();
     let network_clients =
         make_network_authority_clients_with_network_config(&committee, &network_config)
